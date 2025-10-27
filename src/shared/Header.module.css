@@ -1,0 +1,142 @@
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  
+  
+}
+
+
+
+.title {
+  flex: 1;
+  text-align: center;
+  
+}
+
+.nav {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 1rem;
+  
+}
+
+.active {
+  color: rgb(72, 43, 217); 
+  text-decoration: underline;
+  font-weight: bold;
+}
+
+.inactive {
+  color: black; 
+  text-decoration: none;
+  font-weight: bold;
+}
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.userName {
+  font-weight: bold;
+}
+
+.logoutButton {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.logoutButton:hover {
+  background-color: #d32f2f;
+}
+.authLinks {
+  display: flex;
+  gap: 1rem;
+  margin-left: auto;
+  justify-content: flex-end;
+  align-items: center;
+}
+
+
+
+
+
+
+/* Boxed style for Login & Sign Up */
+.authLinks a {
+  color: white;
+  background-color: #007bff;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+  transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.authLinks a:hover {
+  background-color: #0056b3;
+  transform: translateY(-2px);
+}
+
+/* Optionally make "Sign Up" stand out */
+.authLinks a:last-child {
+  background-color: #28a745; /* green */
+}
+
+.authLinks a:last-child:hover {
+  background-color: #218838;
+}
+
+.authLinks a {
+  color: black;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease-in-out;
+}
+
+.authLinks a:hover {
+  color: gray;
+}
+
+
+.userSection {
+  position: fixed;        
+  bottom: 20px;          
+  right: 25px;            
+  background-color: #fff; 
+  border: 1px solid #ddd; 
+  border-radius: 8px;    
+  padding: 0.5rem 1rem;   
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15); 
+  display: flex;          
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1000;          
+}
+
+.userName {
+  font-weight: bold;
+}
+
+.logoutButton {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 0.25rem 0.5rem;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.logoutButton:hover {
+  background-color: #d32f2f;
+}

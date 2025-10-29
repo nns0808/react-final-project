@@ -1,73 +1,36 @@
-# React + TypeScript + Vite
+Book List App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Book List App is a React-based web application that helps users manage their personal reading collection. It allows adding, searching, sorting, editing, and rating books in a clean, intuitive interface — with data stored and synced using Airtable.
 
-Currently, two official plugins are available:
+Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+⦁	Add New Books – Enter a book’s title, author, and optional details such as description and personal notes.
+⦁	Edit Books – Update book information directly in the list with inline editing.
+⦁	Search & Filter – Quickly find books by title using a responsive search field.
+⦁	Sort Options – Sort your list by title, author, rating, or date added, in ascending or descending order.
+⦁	Star Ratings – Rate each book with an interactive star rating system.
+⦁	Pagination – Automatically organizes your list into pages for easy navigation.
+⦁	Airtable Integration – Sync and persist your book data through the Airtable API.
 
-## React Compiler
+Tech Stack
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+⦁	React (with Hooks) – Core UI and state management
+⦁	
+⦁	React Router – Navigation and page parameters
+⦁	
+⦁	Styled Components & CSS Modules – Modular, scoped styling
+⦁	
+⦁	JavaScript (ES6+) – Logic and functionality
+⦁	
+⦁	Airtable API – Backend and data storage
 
-## Expanding the ESLint configuration
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+Main Components
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+Component	           Purpose
+⦁	BookPage	Main container handling pagination, filtering, and sorting logic
+⦁	BookForm	Adds new books to the list
+⦁	BookList	Displays the list of books
+⦁	BookListItem	Each book entry with edit, rating, and completion controls
+⦁	BookViewForm	Handles search, sorting, and filtering options
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
-
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
-
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
-
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```

@@ -8,10 +8,18 @@ function BookForm({ onAddBook, isSaving }) {
   const [author, setAuthor] = useState("");
   const [about, setAbout] = useState("");
   const [like, setLike] = useState("");
+  const [error, setError] = useState(""); 
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !author) return;
+
+    // Custom validation
+    if (!title.trim() || !author.trim()) {
+      setError("Please fill out both Title and Author.");
+      return;
+    }
+
+    setError(""); // Clear previous error
 
     await onAddBook({
       title,
@@ -19,7 +27,7 @@ function BookForm({ onAddBook, isSaving }) {
       about,
       like,
       isCompleted: false,
-      rating: 1, // 
+      rating: 1,
     });
 
     setTitle("");
@@ -30,15 +38,39 @@ function BookForm({ onAddBook, isSaving }) {
 
   return (
     <form className={styles.bookForm} onSubmit={handleSubmit}>
-      <TextInputWithLabel elementId="title" labelText="Title" value={title} onChange={(e) => setTitle(e.target.value)} />
-      <TextInputWithLabel elementId="author" labelText="Author" value={author} onChange={(e) => setAuthor(e.target.value)} />
-      <TextInputWithLabel elementId="about" labelText="About" value={about} onChange={(e) => setAbout(e.target.value)} />
-      <TextInputWithLabel elementId="like" labelText="Like" value={like} onChange={(e) => setLike(e.target.value)} />
-      <button type="submit" disabled={isSaving}>{isSaving ? "Saving..." : "Add Book"}</button>
+      {error && <p className={styles.error}>{error}</p>} {/* <-- display error */}
+      
+      <TextInputWithLabel
+        elementId="title"
+        labelText="Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        required
+      />
+      <TextInputWithLabel
+        elementId="author"
+        labelText="Author"
+        value={author}
+        onChange={(e) => setAuthor(e.target.value)}
+        required
+      />
+      <TextInputWithLabel
+        elementId="about"
+        labelText="About"
+        value={about}
+        onChange={(e) => setAbout(e.target.value)}
+      />
+      <TextInputWithLabel
+        elementId="like"
+        labelText="Like"
+        value={like}
+        onChange={(e) => setLike(e.target.value)}
+      />
+      <button type="submit" disabled={isSaving}>
+        {isSaving ? "Saving..." : "Add Book"}
+      </button>
     </form>
   );
 }
 
 export default BookForm;
-
-

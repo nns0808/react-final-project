@@ -9,7 +9,7 @@ import {
   bookReducer,
   actions as bookActions,
   initialState as initialBookState,
-} from './reducer/book.reducer.jsx';
+} from './reducer/book.reducer.js';
 
 function App() {
   const [bookState, dispatch] = useReducer(bookReducer, initialBookState);

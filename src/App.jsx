@@ -1,13 +1,10 @@
-// src/App.jsx
 import './App.css';
 import { useEffect, useCallback, useReducer, useState } from 'react';
 import { useLocation, Routes, Route } from 'react-router-dom';
-
 import BookPage from './pages/BookPage';
 import Header from './shared/Header';
 import About from './pages/About';
 import NotFound from './pages/NotFound';
-
 import {
   bookReducer,
   actions as bookActions,
@@ -35,12 +32,12 @@ function App() {
 
   // Build Airtable URL with sort/search
   const encodeUrl = useCallback(() => {
-    const sortQuery = `sort[0][field]=${sortField}&sort[0][direction]=${sortDirection}`;
+    const sortQuery = `sort[0][field]=createdTime&sort[0][direction]=desc`;
     const searchQuery = queryString
       ? `&filterByFormula=SEARCH("${encodeURIComponent(queryString)}",{title})`
       : "";
     return `${baseUrl}?${sortQuery}${searchQuery}`;
-  }, [sortField, sortDirection, queryString]);
+  }, [queryString, baseUrl]);
 
   // Fetch books from Airtable
   const fetchBooks = useCallback(async () => {
@@ -51,7 +48,13 @@ function App() {
       });
       if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
       const data = await response.json();
-      dispatch({ type: bookActions.loadBook, records: data.records });
+
+      const normalizedRecords = data.records.map(rec => ({
+        ...rec,
+        createdTime: rec.createdTime,
+      }));
+
+      dispatch({ type: bookActions.loadBook, records: normalizedRecords });
     } catch (error) {
       dispatch({ type: bookActions.setLoadError, error: { message: error.message } });
     }
@@ -63,112 +66,125 @@ function App() {
   const addBook = async (newBook) => {
     dispatch({ type: bookActions.startRequest });
     dispatch({ type: bookActions.clearError });
+
     try {
-      const payload = { records: [{ fields: newBook }] };
+      const payload = {
+        records: [
+          {
+            fields: {
+              title: String(newBook.title),
+              author: String(newBook.author),
+              about: newBook.about ? String(newBook.about) : "",
+              like: newBook.like ? String(newBook.like) : "",
+              isCompleted: !!newBook.isCompleted,
+              rating: newBook.rating != null ? Number(newBook.rating) || 1 : 1,
+            },
+          },
+        ],
+      };
+
+      console.log("Payload for Airtable:", JSON.stringify(payload, null, 2));
+
       const response = await fetch(baseUrl, {
-        method: 'POST',
-        headers: { Authorization: token, 'Content-Type': 'application/json' },
+        method: "POST",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
         body: JSON.stringify(payload),
       });
+
       if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
+
       const data = await response.json();
-      dispatch({ type: bookActions.addBook, record: data.records[0] });
-      fetchBooks();
+      const newRecord = data.records[0];
+
+      // Add new book to state immediately (no need to fetch all again)
+      dispatch({ type: bookActions.addBook, record: { ...newRecord, createdTime: newRecord.createdTime } });
+
     } catch (error) {
+      console.error("Error adding book:", error);
       dispatch({ type: bookActions.setLoadError, error: { message: error.message } });
     } finally {
       dispatch({ type: bookActions.endRequest });
     }
   };
 
-  // Update an existing book (title, author, about, like, isCompleted)
-
-const updateBook = async (editedBook) => {
-  const originalBook = bookList.find((b) => b.id === editedBook.id);
-
-  // Only editable fields 
-  const fields = {
-    title: editedBook.title,
-    author: editedBook.author,
-    about: editedBook.about || "",
-    like: editedBook.like || "",
-    isCompleted: !!editedBook.isCompleted,
-  };
-
-  const payload = {
-    records: [
-      {
-        id: editedBook.id,
-        fields,
-      },
-    ],
-  };
-
-  try {
-    const response = await fetch(baseUrl, {
-      method: "PATCH",
-      headers: {
-        Authorization: token,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
-
-    const data = await response.json();
-    const rec = data.records[0];
-
-    // Normalize to the flat shape your reducer expects:
-    const normalized = {
-      id: rec.id,
-      title: rec.fields.title || "",
-      author: rec.fields.author || "",
-      about: rec.fields.about || "",
-      like: rec.fields.like || "",
-      isCompleted: rec.fields.isCompleted || false,
-      createdTime: rec.createdTime,
+  // Update an existing book
+  const updateBook = async (editedBook) => {
+    const originalBook = bookList.find(b => b.id === editedBook.id);
+    const fields = {
+      title: String(editedBook.title),
+      author: String(editedBook.author),
+      about: editedBook.about ? String(editedBook.about) : "",
+      like: editedBook.like ? String(editedBook.like) : "",
+      isCompleted: !!editedBook.isCompleted,
+      rating: editedBook.rating != null ? Number(editedBook.rating) : 0,
     };
 
-    // Update local state with correct shape
-    dispatch({ type: bookActions.updateBook, editedBook: normalized });
+    const payload = { records: [{ id: editedBook.id, fields }] };
 
-    // Refresh list from server so filters/pagination reflect updated state
-    await fetchBooks();
-  } catch (error) {
-    // revert local optimistic update (if any) and report error
-    dispatch({
-      type: bookActions.revertBook,
-      editedBook: originalBook,
-      error: { message: error.message },
-    });
-  }
-};
+    try {
+      const response = await fetch(baseUrl, {
+        method: "PATCH",
+        headers: {
+          Authorization: token,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
 
+      if (!response.ok) throw new Error(`${response.status}: ${response.statusText}`);
 
+      const data = await response.json();
+      const rec = data.records[0];
 
+      const normalized = {
+        id: rec.id,
+        title: rec.fields.title || "",
+        author: rec.fields.author || "",
+        about: rec.fields.about || "",
+        like: rec.fields.like || "",
+        isCompleted: rec.fields.isCompleted || false,
+        rating: rec.fields.rating || 0,
+        createdTime: rec.createdTime,
+      };
+
+      dispatch({ type: bookActions.updateBook, editedBook: normalized });
+
+    } catch (error) {
+      dispatch({
+        type: bookActions.revertBook,
+        editedBook: originalBook,
+        error: { message: error.message },
+      });
+    }
+  };
 
   return (
     <>
       <Header title={title} />
       <Routes>
-        <Route path="/" element={
-          <BookPage
-            bookList={bookList}
-            isLoading={isLoading}
-            isSaving={isSaving}
-            errorMessage={errorMessage}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            queryString={queryString}
-            addBook={addBook}
-            updateBook={updateBook}
-            setSortField={(field) => dispatch({ type: bookActions.setSortField, payload: field })}
-            setSortDirection={(dir) => dispatch({ type: bookActions.setSortDirection, payload: dir })}
-            setQueryString={(q) => dispatch({ type: bookActions.setQueryString, payload: q })}
-            clearError={() => dispatch({ type: bookActions.clearError })}
-          />
-        }/>
+        <Route
+          path="/"
+          element={
+            <BookPage
+              bookList={bookList}
+              isLoading={isLoading}
+              isSaving={isSaving}
+              errorMessage={errorMessage}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              queryString={queryString}
+              addBook={addBook}
+              updateBook={updateBook}
+              setSortField={field => dispatch({ type: bookActions.setSortField, payload: field })}
+              setSortDirection={dir => dispatch({ type: bookActions.setSortDirection, payload: dir })}
+              setQueryString={q => dispatch({ type: bookActions.setQueryString, payload: q })}
+              clearError={() => dispatch({ type: bookActions.clearError })}
+            />
+          }
+        />
         <Route path="/about" element={<About />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

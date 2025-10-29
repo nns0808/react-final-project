@@ -39,6 +39,7 @@ export function bookReducer(state = initialState, action) {
           about: record.fields.about || "",
           like: record.fields.like || "",
           isCompleted: record.fields.isCompleted || false,
+          rating: record.fields.rating || 0, // ⭐ Added rating field
           createdTime: record.createdTime,
         })),
         errorMessage: null,
@@ -58,6 +59,7 @@ export function bookReducer(state = initialState, action) {
         about: action.record.fields.about || "",
         like: action.record.fields.like || "",
         isCompleted: action.record.fields.isCompleted || false,
+        rating: action.record.fields.rating || 0, // ⭐
         createdTime: action.record.createdTime,
       };
       return { ...state, bookList: [savedBook, ...state.bookList], isSaving: false };
@@ -92,4 +94,5 @@ export function bookReducer(state = initialState, action) {
       return state;
   }
 }
+
 

@@ -1,11 +1,13 @@
+// src/features/BookViewForm.jsx
 import { useState, useEffect } from "react";
 import styled from "styled-components";
 
+// --- Styled Components ---
 const StyledForm = styled.form`
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
   gap: 0.5rem;
+  margin-bottom: 1rem;
 `;
 
 const StyledLabel = styled.label`
@@ -29,40 +31,49 @@ const StyledButton = styled.button`
   cursor: pointer;
 `;
 
+// --- Component ---
 function BookViewForm({ 
   sortField,
-  setSortField,
   sortDirection,
-  setSortDirection,
   queryString,
-  setQueryString
+  setSortField,
+  setSortDirection,
+  setQueryString,
+  clearError,
+  setCurrentPage
 }) {
-  const [localQueryString, setLocalQueryString] = useState(queryString);
+  const [localQueryString, setLocalQueryString] = useState(queryString || "");
 
+  // --- Debounced search ---
   useEffect(() => {
     const debounce = setTimeout(() => {
-      console.log("Debounced query:", localQueryString);
       setQueryString(localQueryString);
-    }, 500);
+      setCurrentPage(1); // reset page on search
+      if (clearError) clearError();
+    }, 300);
 
     return () => clearTimeout(debounce);
-  }, [localQueryString, setQueryString]);
+  }, [localQueryString, setQueryString, setCurrentPage, clearError]);
 
+  // --- Sync local input with external queryString ---
   useEffect(() => {
-    setLocalQueryString(queryString);
+    setLocalQueryString(queryString || "");
   }, [queryString]);
 
-  function preventRefresh(e) {
-    e.preventDefault();
-  }
-
-  function handleSortFieldChange(e) {
+  // --- Sort change handlers ---
+  const handleSortFieldChange = (e) => {
     setSortField(e.target.value);
-  }
+    setCurrentPage(1); // reset page on sort
+  };
 
-  function handleSortDirectionChange(e) {
+  const handleSortDirectionChange = (e) => {
     setSortDirection(e.target.value);
-  }
+    setCurrentPage(1); // reset page on sort
+  };
+
+  const preventRefresh = (e) => e.preventDefault();
+
+ 
 
   return (
     <StyledForm onSubmit={preventRefresh}>
@@ -70,20 +81,29 @@ function BookViewForm({
         Search book:
         <StyledInput
           type="text"
+          placeholder="Type to filter..."
           value={localQueryString}
           onChange={(e) => setLocalQueryString(e.target.value)}
-          placeholder="Type to filter..."
         />
       </StyledLabel>
-      <StyledButton type="button" onClick={() => setLocalQueryString("")}>
+
+      <StyledButton
+        type="button"
+        onClick={() => {
+          setLocalQueryString("");
+          setCurrentPage(1);
+        }}
+      >
         Clear
       </StyledButton>
 
       <StyledLabel>
         Sort by:
         <StyledSelect value={sortField} onChange={handleSortFieldChange}>
-          <option value="title">Title</option>
           <option value="createdTime">Time added</option>
+          <option value="title">Title</option>
+          <option value="author">Author</option>
+          <option value="rating">Rating</option>
         </StyledSelect>
       </StyledLabel>
 

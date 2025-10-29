@@ -1,5 +1,14 @@
-
 .bookListItem {
-  padding-bottom: 0.5rem;
- 
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
+.bookListItem button {
+  display: inline-block;
+  background-color: #d86464;
+  border: 1px solid #ccc;
+  padding: 0.3rem 0.6rem;
+  cursor: pointer;
+}
+
+

@@ -1,8 +1,7 @@
-import { useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
-import BookForm from "../features/BookForm.jsx";
-import BookList from "../features/BookList/BookList.jsx";
-import BookViewForm from "../features/BookViewForm.jsx";
+import { useState, useMemo, useEffect } from "react";
+import BookForm from "../features/BookForm";
+import BookList from "../features/BookList/BookList";
+import BookViewForm from "../features/BookViewForm";
 import styles from "./BookPage.module.css";
 
 function BookPage({
@@ -20,132 +19,118 @@ function BookPage({
   setQueryString,
   clearError,
 }) {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [currentPage, setCurrentPage] = useState(1);
+  const booksPerPage = 10;
 
-  const itemsPerPage = 10;
-  const currentPage = parseInt(searchParams.get("page") || "1", 10);
+  // Reset to page 1 whenever search or sorting changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [queryString, sortField, sortDirection]);
 
-  // --- Sorting ---
-  let sortedList = [...bookList];
-
-  if (sortField === "newest" || sortField === "createdTime") {
-    sortedList.sort(
-      (a, b) => new Date(b.createdTime) - new Date(a.createdTime)
-    );
-  } else if (sortField === "title") {
-    sortedList.sort((a, b) =>
-      sortDirection === "asc"
-        ? a.title.localeCompare(b.title)
-        : b.title.localeCompare(a.title)
-    );
-  } else if (sortField === "author") {
-    sortedList.sort((a, b) =>
-      sortDirection === "asc"
-        ? a.author.localeCompare(b.author)
-        : b.author.localeCompare(a.author)
-    );
-  }
-
-  // --- Filtering (if queryString exists) ---
-  const filteredList = sortedList.filter((book) =>
-    book.title.toLowerCase().includes(queryString.toLowerCase())
-  );
-
-  // --- Pagination ---
-  const totalPages = Math.max(1, Math.ceil(filteredList.length / itemsPerPage));
-  const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
-
-  const indexOfFirstBook = (safeCurrentPage - 1) * itemsPerPage;
-  const indexOfLastBook = indexOfFirstBook + itemsPerPage;
-  const currentBooks = filteredList.slice(indexOfFirstBook, indexOfLastBook);
-
-  // --- Add new book ---
+  // --- Add new book handler ---
   const handleAddBook = async (newBook) => {
     try {
-      await addBook(newBook);
-      
-      setSortField("newest");
-      setSearchParams({ page: "1" });
+      await addBook({ ...newBook, rating: newBook.rating ?? 1 });
+      setCurrentPage(1); // always show page 1 for new book
     } catch (error) {
       console.error("Error adding book:", error);
     }
   };
 
-  // --- Validate current page ---
-  useEffect(() => {
-    if (
-      totalPages > 0 &&
-      (isNaN(currentPage) || currentPage < 1 || currentPage > totalPages)
-    ) {
-      setSearchParams({ page: "1" });
-    }
-  }, [currentPage, totalPages, setSearchParams]);
+  // --- Filter books ---
+  const filteredList = useMemo(() => {
+    if (!queryString) return bookList;
+    return bookList.filter(
+      (book) => book.title?.toLowerCase().includes(queryString.toLowerCase())
+    );
+  }, [bookList, queryString]);
 
-  // --- Page navigation ---
-  const goToPage = (pageNumber) => {
-    const safePage = Math.min(Math.max(pageNumber, 1), totalPages);
-    setSearchParams({ page: String(safePage) });
-  };
+  // --- Sort books ---
+  const sortedList = useMemo(() => {
+    const sorted = [...filteredList];
+
+    switch (sortField) {
+      case "title":
+        sorted.sort((a, b) =>
+          sortDirection === "asc"
+            ? a.title.localeCompare(b.title)
+            : b.title.localeCompare(a.title)
+        );
+        break;
+
+      case "author":
+        sorted.sort((a, b) =>
+          sortDirection === "asc"
+            ? a.author.localeCompare(b.author)
+            : b.author.localeCompare(a.author)
+        );
+        break;
+
+      case "rating":
+        sorted.sort((a, b) =>
+          sortDirection === "asc"
+            ? (a.rating ?? 0) - (b.rating ?? 0)
+            : (b.rating ?? 0) - (a.rating ?? 0)
+        );
+        break;
+
+      default:
+        // Default: newest first
+        sorted.sort(
+          (a, b) => new Date(b.createdTime) - new Date(a.createdTime)
+        );
+        break;
+    }
+
+    return sorted;
+  }, [filteredList, sortField, sortDirection]);
+
+  // --- Pagination ---
+  const totalPages = Math.ceil(sortedList.length / booksPerPage);
+  const startIdx = (currentPage - 1) * booksPerPage;
+  const currentBooks = sortedList.slice(startIdx, startIdx + booksPerPage);
+
+  const handleNextPage = () =>
+    setCurrentPage((p) => Math.min(p + 1, totalPages));
+  const handlePrevPage = () =>
+    setCurrentPage((p) => Math.max(p - 1, 1));
 
   return (
-    <div className={styles.bookPageContainer}>
-      {/* Add new book */}
-      <BookForm onAddBook={handleAddBook} isSaving={isSaving} />
-
-      {/* Books list */}
-      <BookList
-        bookList={currentBooks}
-        onUpdateBook={updateBook}
-        isLoading={isLoading}
-      />
-
-      {/* Sorting & search */}
+    <div className={styles.bookPage}>
       <BookViewForm
         sortField={sortField}
-        setSortField={setSortField}
         sortDirection={sortDirection}
-        setSortDirection={setSortDirection}
         queryString={queryString}
+        setSortField={setSortField}
+        setSortDirection={setSortDirection}
         setQueryString={setQueryString}
+        clearError={clearError}
+        setCurrentPage={setCurrentPage}
       />
 
-      {/* Pagination */}
+      <BookForm onAddBook={handleAddBook} isSaving={isSaving} />
+
+      {isLoading && <p>Loading books...</p>}
+      {errorMessage && <p className={styles.error}>Error: {errorMessage}</p>}
+
+      <BookList bookList={currentBooks} onUpdateBook={updateBook} />
+
       <div className={styles.pagination}>
-        <button
-          onClick={() => goToPage(safeCurrentPage - 1)}
-          disabled={safeCurrentPage === 1}
-        >
-          Previous
+        <button onClick={handlePrevPage} disabled={currentPage === 1}>
+          Prev
         </button>
-
-        {Array.from({ length: totalPages }, (_, i) => (
-          <button
-            key={i + 1}
-            onClick={() => goToPage(i + 1)}
-            className={i + 1 === safeCurrentPage ? styles.activePage : ""}
-          >
-            {i + 1}
-          </button>
-        ))}
-
+        <span>
+          Page {currentPage} of {totalPages || 1}
+        </span>
         <button
-          onClick={() => goToPage(safeCurrentPage + 1)}
-          disabled={safeCurrentPage === totalPages}
+          onClick={handleNextPage}
+          disabled={currentPage === totalPages || totalPages === 0}
         >
           Next
         </button>
       </div>
-
-      {/* Error display */}
-      {errorMessage && (
-        <div className={styles.error}>
-          <p>{errorMessage}</p>
-          <button onClick={clearError}>Dismiss</button>
-        </div>
-      )}
     </div>
   );
 }
 
 export default BookPage;
-

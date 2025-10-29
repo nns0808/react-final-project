@@ -1,0 +1,17 @@
+/* BookViewForm.module.css */
+
+.bookViewForm {
+  margin-bottom: 1rem;
+}
+
+.searchInput {
+  padding: 0.5rem;
+  width: 200px;
+  margin-right: 1rem;
+}
+
+.sortControls {
+  display: inline-flex;
+  gap: 1rem;
+  align-items: center;
+}

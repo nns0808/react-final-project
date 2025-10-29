@@ -13,7 +13,14 @@ function BookForm({ onAddBook, isSaving }) {
     e.preventDefault();
     if (!title || !author) return;
 
-    await onAddBook({ title, author, about, like, isCompleted: false });
+    await onAddBook({
+      title,
+      author,
+      about,
+      like,
+      isCompleted: false,
+      rating: 1, // 
+    });
 
     setTitle("");
     setAuthor("");
@@ -33,3 +40,5 @@ function BookForm({ onAddBook, isSaving }) {
 }
 
 export default BookForm;
+
+

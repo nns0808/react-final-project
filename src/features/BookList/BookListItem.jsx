@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import TextInputWithLabel from "../../shared/TextInputWithLabel";
-import RatingStars from "./RatingStars"; // ⭐ Import rating component
+import RatingStars from "./RatingStars"; // 
 import styles from "./BookListItem.module.css";
 
 function BookListItem({ book, onUpdateBook }) {
@@ -43,7 +43,7 @@ function BookListItem({ book, onUpdateBook }) {
     onUpdateBook({ ...book, isCompleted: !book.isCompleted });
   };
 
-  // ⭐ Handle star rating
+  // Handle star rating
   const handleRate = (newRating) => {
     onUpdateBook({ ...book, rating: newRating });
   };
@@ -102,7 +102,7 @@ function BookListItem({ book, onUpdateBook }) {
             </span>
           )}
 
-          {/* ⭐ Display and update rating */}
+          {/* Display and update rating */}
           <div className={styles.ratingContainer}>
             <span> | Rating: </span>
             <RatingStars rating={book.rating || 0} onRate={handleRate} />
